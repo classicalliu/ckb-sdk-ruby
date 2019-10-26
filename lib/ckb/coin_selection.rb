@@ -7,7 +7,7 @@ module CKB
     def initialize(outputs, fee_rate)
       @outputs = outputs
       @fee = calculate_fee(outputs.size)
-      @value = @outputs.map { |output| output.capacity }.reduce(&:+)
+      @value = @outputs.map { |output| output.capacity }.reduce(0, &:+)
       @effective_value = @value - @fee
       raise "value: #{value} is less than fee: #{fee}" if @value < @fee
       # what's long_term_fee ?
@@ -42,8 +42,8 @@ module CKB
     def calculate_fixed_fee(cell_deps_size, header_deps_size, outputs, outputs_data, fee_rate)
       size = TransactionSize.every_cell_dep * cell_deps_size +
              TransactionSize.every_header_dep * header_deps_size +
-             outputs.map { |output| TransactionSize.every_output(output) }.reduce(:+) +
-             outputs_data.map { |data| TransactionSize.every_outputs_data(data) }.reduce(:+)
+             outputs.map { |output| TransactionSize.every_output(output) }.reduce(0, :+) +
+             outputs_data.map { |data| TransactionSize.every_outputs_data(data) }.reduce(0, :+)
 
       Types::Transaction.fee(size, fee_rate)
     end
@@ -69,7 +69,7 @@ module CKB
       actual_target = not_input_fees + target_value
 
       # Calculate curr_available_value
-      curr_available_value = utxo_pool.map { |output_group| output_group.effective_value }.reduce(:+)
+      curr_available_value = utxo_pool.map { |output_group| output_group.effective_value }.reduce(0, :+)
 
       if curr_available_value < actual_target
         return {
